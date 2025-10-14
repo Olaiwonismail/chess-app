@@ -24,8 +24,14 @@ def new_game(data):
     return jsonify({'message': 'New game started'})
 
 @main_bp.route('/game_state', methods=['GET'])
-def game_state():   
-    return jsonify(game_data)
+def game_state(): 
+    board = chess.Board(fen=game_data['board'])
+    if board.is_checkmate():
+        
+        return jsonify({'board': game_data['board'],  'checkmate': True, 'success': True})  
+    else:
+        return jsonify({'board': game_data['board'],  'checkmate': False, 'success': True})
+    # return jsonify(game_data)
 
 @main_bp.route('/move', methods=['POST'])
 def move():
