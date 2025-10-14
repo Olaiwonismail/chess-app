@@ -1,0 +1,6 @@
+Flask
+python-dotenv
+python-chess
+Flask-SQLAlchemy
+flask_cors
+flask-socketio
