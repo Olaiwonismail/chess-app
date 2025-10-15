@@ -46,6 +46,8 @@ def move():
         if move in board.legal_moves:
             board.push(move)
             game_data['board'] = board.fen()
+            game_data['turn'] = 'white' if board.turn == chess.WHITE else 'black'
+            print(game_data['turn'])
             # game_data['turn'] = 'white' if board.turn == chess.WHITE else 'black'
             print(game_data['board'])
             return jsonify({'message': 'Move accepted', 'board': game_data['board'], 'turn': game_data['turn'],'success': True})
