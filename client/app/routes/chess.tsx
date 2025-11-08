@@ -1,55 +1,73 @@
+import { Chess } from "chess.js";
 import { Chessboard } from "react-chessboard";
-import { useState } from "react";
+import { useState, useRef } from "react";
+import { io } from "socket.io-client";
+import { useParams } from "react-router";
+const socket = io("http://localhost:5000");
 export default function ChessGame() {
- 
-  const baseUrl = "http://localhost:5000";
-  
-  const [fen, setFen] = useState("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
+  const chessRef = useRef(new Chess()); 
+  // const baseUrl = "http://localhost:5000";
+  const { roomId } = useParams();
+  console.log("room id", roomId);
   let move_ = "";
-  let move = "";
+  const [fen, setFen] = useState(chessRef.current.fen());
+  
+  
 
    function movePiece(move: string) {
-  fetch("http://localhost:5000/move", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      'move': move, // e.g., "e2e4"
-      'fen': fen,   // current board FEN
-    }),
-  })
-    .then((res) => res.json())
-    .then((data) => {
-      if (data.success) {
+    socket.emit("make_move", {
+      move: move,
+      fen: fen,
+    });
+  }
+
+  socket.on("move_made", (data) => {
+  console.log(data.turn);
+  setFen(data.fen);
+});
+
+
+
+    const onPieceDrop = ({ sourceSquare, targetSquare,piece }: { sourceSquare: string; targetSquare: string; piece: string }) => {
+          move_ = `${sourceSquare}${targetSquare}`
+          console.log(move_)
+
       
-        setFen(data.board);
-        // setTurn(data.turn);
-      } else {
-        console.error("Move failed:", data.error);
-      }
-    })
-    .catch((err) => console.error("Request error:", err));
-}
 
+          // return true;
 
+          const moveObj = chessRef.current.move({
+      from: sourceSquare,
+      to: targetSquare,
+      promotion: "q", // auto-promote to queen
+    });
 
-//     const onPieceDrop = ({ sourceSquare, targetSquare,piece }: { sourceSquare: string; targetSquare: string }) => {
-//       move_ = `${sourceSquare}${targetSquare}`
-//       console.log(move_)
-//   return true;
-// };
+    if (moveObj) {
+      setFen(chessRef.current.fen()); 
+          movePiece(move_);
+
+      return true;
+    } else {
+      console.log("Illegal move");
+      return false; // prevents piece from moving
+    }
+    
+  };
 
     
     
   const chessboardOptions = {
-    id: "main-chessboard",
-    // position: fen,
+    showAnimations: true,
+    animationDurationInMs: 300,
+    id: 'show-animations',
+    position: fen,
     boardOrientation: "white",
     allowDragging: true,
     allowDragOffBoard: false,
     allowDrawingArrows: true,
     showNotation: true,
+    
+   
 
     // Board Styling
     boardStyle: {
@@ -62,12 +80,14 @@ export default function ChessGame() {
     darkSquareStyle: { backgroundColor: "#b58863" },
 
     // Optional events
-    // onPieceDrop
+    onPieceDrop
     // Arrow example
     
     
   };
 
-  return <Chessboard options={chessboardOptions} />;
+  return <Chessboard options={chessboardOptions}
+    
+  />;
 }
 

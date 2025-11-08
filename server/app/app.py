@@ -2,9 +2,10 @@ from flask import Flask
 from config import Config
 from flask_cors import CORS
 from flask_socketio import SocketIO
-
+from flask_sqlalchemy import SQLAlchemy
 
 socketio = SocketIO(cors_allowed_origins="*") 
+db = SQLAlchemy()
 
 def create_app():
     app = Flask(__name__)
@@ -12,7 +13,7 @@ def create_app():
     
     CORS(app)
     socketio.init_app(app)
-   
+    db.init_app(app)
     # Register blueprints
     from app.main.route import main_bp
     from app.user.route import user_bp  
